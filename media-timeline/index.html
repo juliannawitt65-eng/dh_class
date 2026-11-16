@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recording the Century: Media Formats, 1877–2006</title>
+<meta name="description" content="An interactive timeline of 20th-century media formats: sound, moving image, broadcast, photography and digital data.">
+<link rel="stylesheet" href="https://cdn.knightlab.com/libs/timeline3/latest/css/timeline.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <p class="kicker">Digital Humanities project</p>
+    <h1>Recording the Century</h1>
+    <p class="dek">Media formats from the wax cylinder to the MP3, 1877–2006</p>
+    <nav><a href="index.html" aria-current="page">Timeline</a><a href="about.html">About, methods &amp; sources</a><a href="data/media-formats-revised.csv">Download data (CSV)</a></nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="filters" role="group" aria-label="Filter the timeline by group">
+      <span class="label">Show:</span>
+      <button type="button" data-g="" aria-pressed="true">All formats</button>
+      <button type="button" data-g="Sound" aria-pressed="false"><i style="background:#e3f1f1"></i>Sound</button>
+      <button type="button" data-g="Moving image" aria-pressed="false"><i style="background:#f3e6ef"></i>Moving image</button>
+      <button type="button" data-g="Broadcast" aria-pressed="false"><i style="background:#f8ecdc"></i>Broadcast</button>
+      <button type="button" data-g="Photography" aria-pressed="false"><i style="background:#e6eaf4"></i>Photography</button>
+      <button type="button" data-g="Digital & data" aria-pressed="false"><i style="background:#e5f0e6"></i>Digital &amp; data</button>
+    </div>
+  </div>
+  <div id="timeline-embed" aria-label="Interactive timeline"></div>
+
+  <section class="wrap listview" aria-labelledby="list-h">
+    <h2 id="list-h">All entries at a glance</h2>
+    <p class="note">The same entries as a plain list, for skimming, screen readers, and printing. Select a headline to jump to it in the timeline.</p>
+    <ol id="list"></ol>
+  </section>
+</main>
+
+<footer class="site"><div class="wrap">
+  <p>Built with <a href="https://timeline.knightlab.com/">TimelineJS</a> by Northwestern University's Knight Lab. Images come from Wikimedia Commons under the licenses credited on each slide. <a href="about.html">Read about the sources and methods.</a></p>
+</div></footer>
+
+<script src="https://cdn.knightlab.com/libs/timeline3/latest/js/timeline.js"></script>
+<script>
+(async function () {
+  const data = await fetch('timeline.json').then(r => r.json());
+  const opts = { hash_bookmark: true, initial_zoom: 2, timenav_height_percentage: 30, font: 'default' };
+  let tl;
+  function render(group) {
+    const d = structuredClone(data);
+    if (group) d.events = d.events.filter(e => e.group === group);
+    document.getElementById('timeline-embed').innerHTML = '';
+    tl = new TL.Timeline('timeline-embed', d, opts);
+  }
+  render('');
+
+  document.querySelectorAll('.filters button').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('.filters button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    history.replaceState(null, '', location.pathname);
+    render(b.dataset.g);
+  }));
+
+  const fmt = sd => {
+    const m = ['','Jan.','Feb.','Mar.','Apr.','May','June','July','Aug.','Sept.','Oct.','Nov.','Dec.'];
+    return [sd.month ? m[+sd.month] : '', sd.day || '', sd.year].filter(Boolean).join(' ').replace(/(\d) (\d{4})$/, '$1, $2');
+  };
+  const list = document.getElementById('list');
+  data.events.forEach(e => {
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="yr">${fmt(e.start_date)}</span>
+      <a href="#event-${e.unique_id}" class="jump">${e.text.headline}</a>
+      <span class="grp">${e.group}</span>`;
+    li.querySelector('a').addEventListener('click', ev => {
+      ev.preventDefault();
+      document.querySelector('.filters button[data-g=""]').click();
+      setTimeout(() => { tl.goToId(e.unique_id); document.getElementById('timeline-embed').scrollIntoView({behavior: 'smooth'}); }, 300);
+    });
+    list.appendChild(li);
+  });
+})();
+</script>
+</body>
+</html>
